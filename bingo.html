@@ -287,21 +287,25 @@
         renderItems(called);
       }
 
+      const setFilterClasses = (actualClass) => {
+        $container.classList.remove("success")
+        $container.classList.remove("failure");
+
+        if (actualClass) $container.classList.add(actualClass);
+      }
+
       const filterCalledItems = (value) => {
         if (value && value !== "") {
           filteredItems = called.filter(item => item.toLowerCase().includes(value.toLowerCase()));
           if (filteredItems.length > 0) {
-            $container.classList.add("success");
-            $container.classList.remove("failure");            
+            setFilterClasses("success");           
           } else {
-            $container.classList.remove("success")
-            $container.classList.add("failure");
+            setFilterClasses("failure");
           }
           renderItems(filteredItems);
         } else {
           renderItems(called);
-          $container.classList.remove("success")
-          $container.classList.remove("failure");
+          setFilterClasses();
         }
       }
 
