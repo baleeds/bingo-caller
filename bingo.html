@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Bingo</title>
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+      font-family: "Segoe UI";
+    }
+    body, html {
+      height: 100%;
+    }
+    body {
+      font-size: 4em;
+    }
+    button {
+      background: #175dc7;
+      border-radius: 8px;
+      border: 1px solid #175dc7;
+      padding: 8px 24px;
+      cursor: pointer;
+      font-size: .5em;
+      color: white;
+    }
+    button:disabled {
+      opacity: .5;
+    }
+    ul {
+      list-style: none;
+      width: 100%;
+    }
+    .success ul li {
+      color: #479e5b;
+    }
+    .failure ul li {
+      color: #c71717;
+    }
+    li:first-child {
+      font-size: 3em;
+      color: #175dc7;
+      font-weight: bold;
+    }
+    li {
+      color: #4a4a44;
+      line-height: 1em;
+      margin-bottom: 24px;
+    }
+    .items {
+      flex: 1;
+      display: flex;
+      overflow-y: auto;
+      margin: 0 auto;
+      text-align: center;
+      padding-top: 70px;
+      width: 100%;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      left: 0;
+    }
+    .controls {
+      width: 100%;
+      padding: 24px;
+      position: fixed;
+      top: 60%;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: flex-end;
+      background: rgb(255,255,255);
+      background: linear-gradient(0deg, rgba(203,236,255,1) 35%, rgba(203,236,255,.6) 70%, transparent 100%);
+    }
+    .success .controls {
+      background: linear-gradient(0deg, rgba(189,232,199,1) 30%, rgba(189,232,199,.5) 60%, transparent 100%);
+    }
+    .failure .controls {
+      background: linear-gradient(0deg, rgba(245,193,193,1) 30%, rgba(245,193,193,.5) 60%, transparent 100%);
+    }
+    .center {
+      margin: 0 auto;
+    }
+    .center * {
+      margin-right: 8px;
+    }
+    .form-control {
+      border-radius: 8px;
+      border: 1px solid #175dc7;
+      padding: 8px 16px;
+      font-size: .5em;
+      width: 300px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="Container">
+    <div class="items">
+      <ul id="Items">
+      </ul>
+    </div>
+    <div class="controls">
+      <div class="center">
+        <button id="Spin" class="primary" autofocus>
+          Call!
+        </button>
+        <button id="Mode">
+          Normal
+        </button>
+        <button id="Refresh">
+          New game
+        </button>
+        <input
+          id="Filter"
+          type="text"
+          width="100"
+          class="form-control"
+          placeholder="Filter called items"
+        />
+      </div>
+    </div>
+  </div>
+  <script>
+    (function() {
+      const b = [
+        "B-Genesis",
+        "B-Exodus",
+        "B-Numbers",
+        "B-Psalms",
+        "B-Proverbs",
+        "B-Lamentations",
+        "B-Acts",
+        "B-Revelation",
+        "B-Leviticus",
+        "B-Hebrews",
+        "B-Galatians",
+        "B-Ephesians",
+        "B-Philippians",
+        "B-Colossians",
+        "B-Deuteronomy",
+        "B-Romans"
+      ];
+
+      const i = [
+        "I-Bethlehem",
+        "I-Jericho",
+        "I-Israel",
+        "I-Jerusalem",
+        "I-Egypt",
+        "I-Zion",
+        "I-Calvary",
+        "I-Heaven",
+        "I-Nazareth",
+        "I-Gethsemane",
+        "I-Eden",
+        "I-Red Sea",
+        "I-Judea",
+        "I-Damascus",
+        "I-Sinai",
+        "I-Nineveh"
+      ];
+
+      const n = [
+        "N-God",
+        "N-Moses",
+        "N-Abraham",
+        "N-Mary",
+        "N-David",
+        "N-Paul",
+        "N-Peter",
+        "N-Joseph",
+        "N-Adam",
+        "N-Eve",
+        "N-Job",
+        "N-Esther",
+        "N-Jonah",
+        "N-Daniel",
+        "N-Noah",
+        "N-Hagar"
+      ];
+
+      const g = [
+        "G-Love",
+        "G-Joy",
+        "G-Peace",
+        "G-Hope",
+        "G-Blood",
+        "G-Water",
+        "G-Holy",
+        "G-King",
+        "G-Well",
+        "G-City",
+        "G-Clay",
+        "G-Baptism",
+        "G-Children",
+        "G-Disciples",
+        "G-Cross",
+        "G-Temple"
+      ];
+
+      const o = [
+        "O-Father",
+        "O-Prince of Peace",
+        "O-Emmanuel",
+        "O-King of Kings",
+        "O-Wonderful Counselor ",
+        "O-Holy Spirit",
+        "O-Jehovah",
+        "O-Messiah",
+        "O-Savior",
+        "O-Lamb of God",
+        "O-Teacher",
+        "O-Redeemer",
+        "O-Light of the World",
+        "O-Healer",
+        "O-Son",
+        "O-Creator"
+      ];
+     
+      const NORMAL = 1;
+      const FOUR_CORNERS = 2;
+      let gameMode = NORMAL;
+
+      let options = [];
+      let called = [];
+
+      const $container = document.getElementById("Container");
+      const $items = document.getElementById("Items");
+      const $spin = document.getElementById("Spin");
+      const $filter = document.getElementById("Filter");
+      const $mode = document.getElementById("Mode");
+      const $refresh = document.getElementById("Refresh");
+      window.items = $items;
+
+      const initializeGame = () => {
+        let columns = []
+        switch(gameMode) {
+          case FOUR_CORNERS:
+            columns = [b, o];
+            break;
+          default:
+            columns = [b, i, n, g, o];
+            break;
+        }
+
+        options = columns.reduce((acc, column) => acc.concat(column), []);
+        called = [];
+
+        $spin.disabled = false;
+        renderItems(called);
+      };
+
+      const getRandomInt = (max) => Math.floor(Math.random() * Math.floor(max));
+      const getRandomValue = (values) => values[getRandomInt(values.length)];
+
+      const addItemToDom = (item) => {
+        const newLi = document.createElement("li");
+        newLi.innerHTML = item;
+        $items.prepend(newLi);
+      }
+
+      const renderItems = (itemsToRender) => {
+        $items.innerHTML = null;
+        if (!itemsToRender || itemsToRender.length < 1) {
+          addItemToDom("--");
+        } else {
+          itemsToRender.forEach(addItemToDom);
+        }
+      }
+
+      const spin = () => {
+        if (options.length < 1) {
+          addItemToDom("Game over!")
+          $spin.disabled = true;
+          return;
+        }
+
+        const randomValue = getRandomValue(options);
+        called.push(randomValue);
+        options = options.filter(value => value !== randomValue);
+
+        renderItems(called);
+      }
+
+      const filterCalledItems = (value) => {
+        if (value && value !== "") {
+          filteredItems = called.filter(item => item.toLowerCase().includes(value.toLowerCase()));
+          if (filteredItems.length > 0) {
+            $container.classList.add("success");
+            $container.classList.remove("failure");            
+          } else {
+            $container.classList.remove("success")
+            $container.classList.add("failure");
+          }
+          renderItems(filteredItems);
+        } else {
+          renderItems(called);
+          $container.classList.remove("success")
+          $container.classList.remove("failure");
+        }
+      }
+
+      const toggleGameMode = () => {
+        gameMode++;
+        if (gameMode > 2) gameMode = 1;
+
+        switch (gameMode) {
+          case FOUR_CORNERS:
+            $mode.innerText = "Four corners";
+            break;
+          default:
+            $mode.innerText = "Normal";
+            break;
+        }
+
+        initializeGame();
+      };
+
+      $spin.addEventListener("click", () => spin());
+      $filter.addEventListener("input", e => filterCalledItems(e.target.value));
+      $mode.addEventListener("click", toggleGameMode);
+      $refresh.addEventListener("click", () => initializeGame())
+
+      initializeGame();
+    })();
+  </script>
+</body>
+</html>
